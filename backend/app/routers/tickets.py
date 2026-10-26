@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..deps import STAFF, current_user
-from ..models import Comment, Ticket, TicketEvent, User
+from ..models import Comment, Ticket, TicketEvent, User, now
 from ..notifications import notify
 from ..schemas import (AssignIn, CommentIn, CommentOut, StatusIn, TicketCreate, TicketDetail,
                        TicketOut, TicketUpdate)
@@ -49,7 +49,7 @@ def create_ticket(data: TicketCreate, db: Session = Depends(get_db), user: User 
 
 @router.get("", response_model=list[TicketOut])
 def list_tickets(status: str | None = None, priority: str | None = None, source: str | None = None,
-                 technician_id: int | None = None, q: str | None = None,
+                 technician_id: int | None = None, q: str | None = None, late: bool = False,
                  db: Session = Depends(get_db), user: User = Depends(current_user)):
     stmt = select(Ticket).order_by(Ticket.id.desc())
     if user.role not in STAFF:
@@ -62,6 +62,8 @@ def list_tickets(status: str | None = None, priority: str | None = None, source:
         stmt = stmt.where(Ticket.source == source)
     if technician_id:
         stmt = stmt.where(Ticket.technician_id == technician_id)
+    if late:
+        stmt = stmt.where(Ticket.status.in_(("open", "in_progress")), Ticket.due_at < now())
     if q:
         cond = Ticket.title.ilike(f"%{q}%")
         if q.strip().lstrip("#").isdigit():

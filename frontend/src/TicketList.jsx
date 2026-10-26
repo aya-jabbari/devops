@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { api, isLate, isStaff, STATUS_LABEL } from "./api.js";
 
-export default function TicketList({ user, onOpen }) {
+export default function TicketList({ user, onOpen, initial = {} }) {
   const [tickets, setTickets] = useState([]);
   const [techs, setTechs] = useState([]);
-  const [f, setF] = useState({ q: "", status: "", priority: "", source: "", technician_id: "" });
+  const [f, setF] = useState({ q: "", status: "", priority: "", source: "", technician_id: "", late: "", ...initial });
   const [error, setError] = useState("");
   const staff = isStaff(user);
 
@@ -35,6 +35,8 @@ export default function TicketList({ user, onOpen }) {
         </select>
         {staff && (
           <>
+            <label className="inline"><input type="checkbox" checked={f.late === "true"}
+              onChange={(e) => setF({ ...f, late: e.target.checked ? "true" : "" })} /> Late only</label>
             <select value={f.source} onChange={set("source")} aria-label="Source">
               <option value="">Any source</option><option value="user">User</option><option value="monitoring">Monitoring</option>
             </select>
