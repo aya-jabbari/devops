@@ -7,7 +7,8 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN python -m venv /app/venv \
-    && /app/venv/bin/pip install --no-cache-dir -r requirements.txt
+    && /app/venv/bin/pip install --no-cache-dir -r requirements.txt \
+    && find /app/venv -type d -name 'setuptools*' -prune -exec rm -rf {} +
 
 FROM cgr.dev/chainguard/python:latest
 
