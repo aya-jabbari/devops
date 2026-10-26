@@ -2,7 +2,7 @@
 and Maryam (incidents: add columns/tables via a migration, do not edit existing ones silently)."""
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
@@ -44,6 +44,62 @@ class Ticket(Base):
     events: Mapped[list["TicketEvent"]] = relationship(
         back_populates="ticket", order_by="TicketEvent.id", cascade="all, delete-orphan")
 
+class Incident(Base):
+    __tablename__ = "incidents"
+
+    __table_args__ = (
+        Index(
+            "ix_incidents_fingerprint_status",
+            "fingerprint",
+            "status",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ticket_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tickets.id"),
+        nullable=True,
+        index=True,
+    )
+    fingerprint: Mapped[str] = mapped_column(String(255), nullable=False)
+    service: Mapped[str] = mapped_column(String(100), nullable=False)
+    severity: Mapped[str] = mapped_column(String(20), nullable=False)
+    alert_name: Mapped[str] = mapped_column(String(150), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(20),
+        default="active",
+        nullable=False,
+        index=True,
+    )
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    grafana_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+    detected_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=now,
+        nullable=False,
+    )
+    recovered_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    closed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=now,
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=now,
+        onupdate=now,
+        nullable=False,
+    )
 
 class Comment(Base):
     __tablename__ = "comments"
