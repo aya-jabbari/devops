@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from sqlalchemy import text
 
 from .db import Base, SessionLocal, engine
-from .routers import auth, tickets
+from .routers import auth, incidents, tickets
 
 
 @asynccontextmanager
@@ -16,6 +16,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="SupportOps API", lifespan=lifespan)
 app.include_router(auth.router)
+app.include_router(incidents.router)
 app.include_router(tickets.router)
 
 
