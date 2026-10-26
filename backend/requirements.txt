@@ -1,4 +1,4 @@
-fastapi==0.115.6
+fastapi==0.162.0
 uvicorn[standard]==0.34.0
 sqlalchemy==2.0.36
 psycopg2-binary==2.9.10
@@ -6,6 +6,6 @@ pydantic==2.10.4
 pydantic-settings==2.7.0
 PyJWT==2.14.0
 setuptools==78.1.1
+wheel==0.48.0
+urllib3==2.8.0
 bcrypt==4.2.1
-httpx==0.28.1
-pytest==8.3.4
