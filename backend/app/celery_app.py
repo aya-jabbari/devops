@@ -2,6 +2,8 @@ import os
 
 from celery import Celery
 
+from .config import settings
+
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
 
 celery_app = Celery(
@@ -18,4 +20,10 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     broker_connection_retry_on_startup=True,
+    beat_schedule={
+        "check-overdue": {
+            "task": "app.tasks.check_overdue",
+            "schedule": settings.overdue_check_seconds,
+        },
+    },
 )

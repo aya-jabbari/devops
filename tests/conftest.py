@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -7,6 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+os.environ.setdefault("NOTIFICATIONS_ENABLED", "false")  # the API must not need Redis in tests
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 from app.db import Base, get_db  # noqa: E402
