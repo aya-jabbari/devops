@@ -1,4 +1,4 @@
-FROM cgr.dev/chainguard/python:3.13-dev AS builder
+FROM cgr.dev/chainguard/python:latest-dev AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
