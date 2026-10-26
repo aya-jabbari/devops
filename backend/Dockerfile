@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN python -m venv /app/venv \
     && /app/venv/bin/pip install --no-cache-dir -r requirements.txt
 
-FROM cgr.dev/chainguard/python:3.13
+FROM cgr.dev/chainguard/python:latest
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
