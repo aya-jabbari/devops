@@ -77,7 +77,7 @@ jobs:
         run: docker build -t supportops-api:ci ./backend
 
       - name: Scan image
-        uses: aquasecurity/trivy-action@v0.28.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: supportops-api:ci
           format: table
