@@ -32,4 +32,14 @@ React · FastAPI · PostgreSQL · Celery/Redis · Docker Compose · Terraform ·
 - Commits : [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, `docs:`, `ci:`...)
 
 ## Démarrage local
-_À venir (compose.yaml)._
+
+```bash
+cp .env.example .env        # puis remplacer SECRET_KEY : openssl rand -hex 32
+docker compose up -d --build
+docker compose ps           # tous les services doivent être "healthy"
+docker compose exec backend python -m app.seed
+```
+
+- API : http://localhost:8000/docs
+- Mailpit (mails capturés) : http://localhost:8025
+- Arrêt : `docker compose down` (garde les données) · `docker compose down -v` (supprime la base)
