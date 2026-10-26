@@ -14,7 +14,7 @@ FROM cgr.dev/chainguard/python:latest
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PATH="/opt/venv/bin:${PATH}"
+    PATH="/app/venv/bin:${PATH}"
 
 WORKDIR /app
 
