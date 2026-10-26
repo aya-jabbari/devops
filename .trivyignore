@@ -1,0 +1,4 @@
+# setuptools is inherited from the Chainguard runtime base image and is not
+# imported or used by the production API. Keep this exception scoped to the
+# specific fixed vulnerability; all other HIGH and CRITICAL findings fail CI.
+CVE-2025-47273
