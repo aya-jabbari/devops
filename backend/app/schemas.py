@@ -161,3 +161,10 @@ class AlertmanagerPayload(BaseModel):
         default_factory=dict,
         alias="commonAnnotations",
     )
+
+
+class IncidentWebhookResult(BaseModel):
+    processed: int
+    created: int
+    updated: int
+    recovered: int
