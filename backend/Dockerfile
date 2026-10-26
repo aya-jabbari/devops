@@ -7,6 +7,10 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip uninstall -y setuptools wheel urllib3 jaraco.context || true \
+    && rm -rf /usr/local/lib/python3.13/site-packages/setuptools* \
+        /usr/local/lib/python3.13/site-packages/wheel* \
+        /usr/local/lib/python3.13/site-packages/urllib3* \
+        /usr/local/lib/python3.13/site-packages/jaraco.context* \
     && pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir jaraco.context==6.1.0
 
