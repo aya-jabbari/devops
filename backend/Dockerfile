@@ -6,8 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN apk add --no-cache build-base postgresql-dev \
-    && python -m venv /app/venv \
+RUN python -m venv /app/venv \
     && /app/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 FROM cgr.dev/chainguard/python:latest
