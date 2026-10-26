@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from sqlalchemy import text
 
 from .db import Base, SessionLocal, engine
+from . import models_notification  # noqa: F401  (registers the notifications table)
 from .routers import auth, tickets
 
 

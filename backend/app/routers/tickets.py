@@ -113,7 +113,7 @@ def change_status(ticket_id: int, data: StatusIn, db: Session = Depends(get_db),
     log(db, t, user, "status_changed", "status", old, new)
     db.commit()
     if new == "resolved":
-        notify("resolved", t.id)
+        notify("resolved", t.id, ref=t.resolved_at.isoformat())
     return t
 
 
@@ -138,7 +138,7 @@ def assign(ticket_id: int, data: AssignIn, db: Session = Depends(get_db),
     db.commit()
     db.refresh(t)
     if target:
-        notify("assigned", t.id, technician_id=target.id)
+        notify("assigned", t.id, ref=t.updated_at.isoformat())
     return t
 
 
