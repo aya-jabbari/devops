@@ -6,7 +6,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
+RUN pip uninstall -y setuptools wheel urllib3 jaraco.context || true \
+    && pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir jaraco.context==6.1.0
 
 COPY app ./app
 
