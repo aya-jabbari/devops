@@ -1,0 +1,6 @@
+apiVersion: v2
+name: supportops
+description: SupportOps - Redis, Celery worker and Celery Beat scheduler (API/frontend added by their owners)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

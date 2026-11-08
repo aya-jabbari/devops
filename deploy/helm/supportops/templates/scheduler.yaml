@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-scheduler
+  labels:
+    {{- include "supportops.labels" . | nindent 4 }}
+    app.kubernetes.io/component: scheduler
+spec:
+  replicas: 1            # never more than one Celery Beat
+  strategy:
+    type: Recreate       # no overlap during updates: two Beats would double-schedule
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: scheduler
+  template:
+    metadata:
+      labels:
+        {{- include "supportops.labels" . | nindent 8 }}
+        app.kubernetes.io/component: scheduler
+    spec:
+      containers:
+        - name: scheduler
+          image: {{ include "supportops.image" . }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          command: ["python", "-m", "celery"]
+          args: ["-A", "app.celery_app", "beat", "--loglevel=info",
+                 "--schedule=/tmp/celerybeat-schedule", "--pidfile=/tmp/celerybeat.pid"]
+          env:
+            {{- include "supportops.backendEnv" . | nindent 12 }}
+          # The image has no shell: probes call python directly.
+          readinessProbe:
+            exec: { command: ["python", "-c", "import os; os.stat('/tmp/celerybeat.pid')"] }
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            exec: { command: ["python", "-c", "import os; os.stat('/tmp/celerybeat.pid')"] }
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            {{- toYaml .Values.scheduler.resources | nindent 12 }}

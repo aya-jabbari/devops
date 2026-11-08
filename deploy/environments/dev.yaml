@@ -1,0 +1,4 @@
+# Overrides for the demo/dev cluster. Usage:
+#   helm upgrade --install supportops deploy/helm/supportops -f deploy/environments/dev.yaml
+backendImage:
+  tag: dev
