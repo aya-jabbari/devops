@@ -7,4 +7,5 @@ pydantic-settings==2.15.0
 PyJWT==2.14.0
 bcrypt==4.2.1
 celery==5.6.3
+packaging==25.0  # imported by kombu's redis transport but not declared by it
 redis==6.4.0
