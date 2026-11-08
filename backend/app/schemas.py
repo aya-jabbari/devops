@@ -168,3 +168,21 @@ class IncidentWebhookResult(BaseModel):
     created: int
     updated: int
     recovered: int
+
+
+class IncidentOut(ORM):
+    id: int
+    ticket_id: int | None
+    fingerprint: str
+    service: str
+    severity: str
+    alert_name: str
+    status: str
+    summary: str
+    grafana_url: str | None
+    detected_at: datetime
+    recovered_at: datetime | None
+    closed_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+

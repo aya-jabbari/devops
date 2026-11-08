@@ -1,6 +1,6 @@
 fastapi==0.162.0
 uvicorn[standard]==0.34.0
-sqlalchemy==2.0.36
+sqlalchemy==2.0.55
 psycopg[binary]==3.3.6
 pydantic==2.14.1
 pydantic-settings==2.15.0
@@ -8,3 +8,4 @@ PyJWT==2.14.0
 bcrypt==4.2.1
 celery==5.6.3
 redis==6.4.0
+packaging>=24.0

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from .models import Incident
 from .schemas import AlertmanagerAlert
+from .tasks import notify_incident
 
 
 @dataclass
@@ -13,6 +14,11 @@ class IncidentProcessingResult:
     created: int = 0
     updated: int = 0
     recovered: int = 0
+    created_incidents: list[Incident] = None
+
+    def __post_init__(self):
+        if self.created_incidents is None:
+            self.created_incidents = []
 
 
 def process_alerts(db: Session, alerts: list[AlertmanagerAlert]) -> IncidentProcessingResult:
@@ -25,6 +31,21 @@ def process_alerts(db: Session, alerts: list[AlertmanagerAlert]) -> IncidentProc
             _process_resolved(db, alert, result)
 
     db.commit()
+
+    # Déclencher la tâche Celery asynchrone pour chaque nouvel incident créé
+    for incident in result.created_incidents:
+        try:
+            notify_incident.delay(
+                incident.id,
+                incident.alert_name,
+                incident.severity,
+                incident.summary,
+                incident.grafana_url,
+            )
+        except Exception:
+            # Ne bloque pas la transaction si Redis/Celery est temporairement injoignable
+            pass
+
     return result
 
 
@@ -46,6 +67,8 @@ def _process_firing(
             detected_at=alert.starts_at,
         )
         db.add(incident)
+        db.flush()
+        result.created_incidents.append(incident)
         result.created += 1
         return
 
