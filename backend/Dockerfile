@@ -13,6 +13,12 @@ RUN python -m venv /app/venv \
 
 FROM python:3.12-slim
 
+# Security: pick up Debian's fixed zlib1g (Trivy HIGH findings on the base image).
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends --only-upgrade zlib1g \
+    && rm -rf /var/lib/apt/lists/*
+
+
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/app/venv/bin:${PATH}"
