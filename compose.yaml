@@ -74,9 +74,11 @@ services:
 
   worker:
     <<: *backend
-    command: celery -A app.celery_app worker --loglevel=info --concurrency=2
+    entrypoint: ["/app/venv/bin/python", "-m", "celery"]
+    command: ["-A", "app.celery_app", "worker", "--loglevel=info", "--concurrency=2"]
     healthcheck:
-      test: ["CMD-SHELL", "celery -A app.celery_app inspect ping -d celery@$$HOSTNAME"]
+      # no shell in the image: call the venv python directly
+      test: ["CMD", "/app/venv/bin/python", "-m", "celery", "-A", "app.celery_app", "inspect", "ping"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -84,9 +86,10 @@ services:
 
   beat:
     <<: *backend
-    command: celery -A app.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule --pidfile=/tmp/celerybeat.pid
+    entrypoint: ["/app/venv/bin/python", "-m", "celery"]
+    command: ["-A", "app.celery_app", "beat", "--loglevel=info", "--schedule=/tmp/celerybeat-schedule", "--pidfile=/tmp/celerybeat.pid"]
     healthcheck:
-      test: ["CMD-SHELL", "test -f /tmp/celerybeat.pid"]
+      test: ["CMD", "/app/venv/bin/python", "-c", "import os; os.stat('/tmp/celerybeat.pid')"]
       interval: 15s
       timeout: 3s
       retries: 3
