@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-worker
+  labels:
+    {{- include "supportops.labels" . | nindent 4 }}
+    app.kubernetes.io/component: worker
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        {{- include "supportops.labels" . | nindent 8 }}
+        app.kubernetes.io/component: worker
+    spec:
+      containers:
+        - name: worker
+          image: {{ include "supportops.image" . }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          # The image entrypoint is python: set the command explicitly.
+          command: ["python", "-m", "celery"]
+          args: ["-A", "app.celery_app", "worker", "--loglevel=info", "--concurrency={{ .Values.worker.concurrency }}"]
+          env:
+            {{- include "supportops.backendEnv" . | nindent 12 }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          # The image has no shell: probes call python directly.
+          readinessProbe:
+            exec:
+              command: ["python", "-m", "celery", "-A", "app.celery_app", "inspect", "ping", "-d", "celery@$(POD_NAME)"]
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["python", "-m", "celery", "-A", "app.celery_app", "inspect", "ping", "-d", "celery@$(POD_NAME)"]
+            initialDelaySeconds: 30
+            periodSeconds: 60
+            timeoutSeconds: 10
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
