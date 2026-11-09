@@ -39,3 +39,7 @@ kubeconfig*
 .idea/
 .DS_Store
 Thumbs.db
+
+# --- Database backups (contain user data) ---
+backups/
+*.dump
