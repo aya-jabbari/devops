@@ -1,31 +1,25 @@
-variable "hcloud_token" {
-  description = "Hetzner Cloud API token (read/write). Pass it with TF_VAR_hcloud_token, never in a file."
-  type        = string
-  sensitive   = true
-}
-
 variable "project_name" {
-  description = "Prefix for resource names and labels."
+  description = "Prefix for resource names and tags."
   type        = string
   default     = "supportops"
 }
 
-variable "location" {
-  description = "Hetzner location (single region, to keep costs and latency simple)."
+variable "aws_region" {
+  description = "AWS region (single region, to keep costs and latency simple)."
   type        = string
-  default     = "fsn1"
+  default     = "eu-west-3"
 }
 
-variable "server_type" {
-  description = "Server size. K3s + PostgreSQL + Redis + Argo CD + Prometheus/Grafana need about 4 GB of RAM at least. Check availability with: hcloud server-type list"
+variable "instance_type" {
+  description = "EC2 size. K3s + PostgreSQL + Redis + Argo CD + Prometheus/Grafana need about 4 GB of RAM at least (t3.medium). t3.micro (1 GB) is too small."
   type        = string
-  default     = "cx22"
+  default     = "t3.medium"
 }
 
-variable "image" {
-  description = "Operating system image."
-  type        = string
-  default     = "ubuntu-24.04"
+variable "root_volume_gb" {
+  description = "Root disk size in GB (K3s, images, PostgreSQL and Redis volumes live here via local-path)."
+  type        = number
+  default     = 30
 }
 
 variable "ssh_public_key_path" {
