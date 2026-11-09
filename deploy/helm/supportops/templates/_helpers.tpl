@@ -20,7 +20,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/* Env shared by worker and scheduler. */}}
 {{- define "supportops.backendEnv" -}}
 - name: REDIS_URL
-  value: redis://{{ .Release.Name }}-redis:6379/0
+  value: redis://redis:6379/0
 - name: SMTP_HOST
   value: {{ .Values.config.smtpHost | quote }}
 - name: SMTP_PORT
