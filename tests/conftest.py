@@ -18,7 +18,10 @@ from app.security import hash_password  # noqa: E402
 
 
 @pytest.fixture()
-def client():
+def client(monkeypatch):
+    from app import incident_service
+
+    monkeypatch.setattr(incident_service.notify_incident, "delay", lambda *args, **kwargs: None)
     engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine, expire_on_commit=False)
