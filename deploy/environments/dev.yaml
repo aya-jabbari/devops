@@ -7,6 +7,6 @@ postgres:
     size: 2Gi          # matches the volume already created on Kind
 api:
   replicas: 5             # 20% of 5 = exactly 1 canary pod
-  imageTag: v3
+  imageTag: v4
   rollout:
     enabled: true
