@@ -40,14 +40,14 @@ serviceMonitor:
   enabled: false
   interval: 30s
 
-# Persistence for PostgreSQL. false = emptyDir (Kind/tests without a StorageClass).
-persistence:
-  enabled: true
-  size: 2Gi
-  storageClass: ""        # empty = cluster default StorageClass
-
+# PostgreSQL. Credentials come from the existing Secret (keys POSTGRES_USER,
+# POSTGRES_PASSWORD, POSTGRES_DB), never from values.
 postgres:
   image: postgres:17-alpine
+  persistence:
+    enabled: true          # false = emptyDir (Kind tests, data lost with the pod)
+    size: 5Gi
+    storageClass: ""       # "" = cluster default (local-path on K3s)
   resources:
     requests: { cpu: 100m, memory: 256Mi }
     limits: { cpu: 500m, memory: 512Mi }
@@ -55,7 +55,7 @@ postgres:
 mailpit:
   image: axllent/mailpit:v1.32.0
   resources:
-    requests: { cpu: 20m, memory: 32Mi }
+    requests: { cpu: 25m, memory: 32Mi }
     limits: { cpu: 100m, memory: 128Mi }
 
 frontendImage:

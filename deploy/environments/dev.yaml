@@ -2,3 +2,6 @@
 #   helm upgrade --install supportops deploy/helm/supportops -f deploy/environments/dev.yaml
 backendImage:
   tag: dev
+postgres:
+  persistence:
+    size: 2Gi          # matches the volume already created on Kind
