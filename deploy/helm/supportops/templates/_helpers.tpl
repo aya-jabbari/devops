@@ -2,6 +2,15 @@
 {{ .Values.backendImage.repository }}:{{ .Values.backendImage.tag }}
 {{- end }}
 
+{{- define "supportops.fullname" -}}
+{{- printf "%s-%s" .Release.Name .Chart.Name | trunc 63 | trimSuffix "-" -}}
+{{- end }}
+
+{{- define "supportops.selectorLabels" -}}
+app.kubernetes.io/name: supportops
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
 {{- define "supportops.labels" -}}
 app.kubernetes.io/name: supportops
 app.kubernetes.io/instance: {{ .Release.Name }}
