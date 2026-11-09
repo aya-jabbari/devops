@@ -39,3 +39,6 @@ kubeconfig*
 .idea/
 .DS_Store
 Thumbs.db
+
+# local database dumps
+backups/

@@ -1,0 +1,65 @@
+# Throw-away HTTPS check for Traefik + TLS (not part of the chart).
+#   scripts/tls-selfsigned.sh
+#   kubectl apply -f deploy/tls/demo-ingress.yaml
+#   kubectl delete -f deploy/tls/demo-ingress.yaml   # when done
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tls-demo
+  namespace: supportops
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: tls-demo }
+  template:
+    metadata:
+      labels: { app: tls-demo }
+    spec:
+      containers:
+        - name: whoami
+          image: traefik/whoami:v1.10.3
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet: { path: /health, port: 80 }
+          livenessProbe:
+            httpGet: { path: /health, port: 80 }
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { cpu: 50m, memory: 32Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tls-demo
+  namespace: supportops
+spec:
+  selector: { app: tls-demo }
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tls-demo
+  namespace: supportops
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts: [supportops.local]
+      secretName: supportops-tls
+  rules:
+    - host: supportops.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tls-demo
+                port:
+                  number: 80

@@ -37,6 +37,10 @@ mailpit:
 
 redis:
   image: redis:8-alpine
+  persistence:
+    enabled: true          # false = no volume (Kind/k3d tests, queue lost with the pod)
+    size: 1Gi
+    storageClass: ""       # "" = cluster default (local-path on K3s)
   resources:
     requests: { cpu: 50m, memory: 64Mi }
     limits: { cpu: 200m, memory: 192Mi }

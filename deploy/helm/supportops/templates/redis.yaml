@@ -1,3 +1,21 @@
+{{- if .Values.redis.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  labels:
+    {{- include "supportops.labels" . | nindent 4 }}
+    app.kubernetes.io/component: redis
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- if .Values.redis.persistence.storageClass }}
+  storageClassName: {{ .Values.redis.persistence.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.redis.persistence.size }}
+---
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -7,6 +25,8 @@ metadata:
     app.kubernetes.io/component: redis
 spec:
   replicas: 1
+  strategy:
+    type: Recreate        # one writer on the volume: never two Redis pods at once
   selector:
     matchLabels:
       app.kubernetes.io/instance: {{ .Release.Name }}
@@ -20,6 +40,12 @@ spec:
       containers:
         - name: redis
           image: {{ .Values.redis.image }}
+          {{- if .Values.redis.persistence.enabled }}
+          args: ["--appendonly", "yes", "--dir", "/data"]   # AOF: queued Celery messages survive a restart
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          {{- end }}
           ports:
             - containerPort: 6379
           readinessProbe:
@@ -32,6 +58,12 @@ spec:
             periodSeconds: 10
           resources:
             {{- toYaml .Values.redis.resources | nindent 12 }}
+      {{- if .Values.redis.persistence.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: redis-data
+      {{- end }}
 ---
 apiVersion: v1
 kind: Service
