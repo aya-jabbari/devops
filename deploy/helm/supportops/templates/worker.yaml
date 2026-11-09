@@ -33,13 +33,13 @@ spec:
           # The image has no shell: probes call python directly.
           readinessProbe:
             exec:
-              command: ["python", "-m", "celery", "-A", "app.celery_app", "inspect", "ping", "-d", "celery@$(POD_NAME)", "-t", "5"]
+              command: ["sh", "-c", "python -m celery -A app.celery_app inspect ping -d celery@$POD_NAME -t 5"]
             initialDelaySeconds: 15
             periodSeconds: 30
             timeoutSeconds: 10
           livenessProbe:
             exec:
-              command: ["python", "-m", "celery", "-A", "app.celery_app", "inspect", "ping", "-d", "celery@$(POD_NAME)", "-t", "5"]
+              command: ["sh", "-c", "python -m celery -A app.celery_app inspect ping -d celery@$POD_NAME -t 5"]
             initialDelaySeconds: 30
             periodSeconds: 60
             timeoutSeconds: 10
