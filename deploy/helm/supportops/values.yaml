@@ -39,3 +39,21 @@ scheduler:
 serviceMonitor:
   enabled: false
   interval: 30s
+
+# Persistence for PostgreSQL. false = emptyDir (Kind/tests without a StorageClass).
+persistence:
+  enabled: true
+  size: 2Gi
+  storageClass: ""        # empty = cluster default StorageClass
+
+postgres:
+  image: postgres:17-alpine
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits: { cpu: 500m, memory: 512Mi }
+
+mailpit:
+  image: axllent/mailpit:v1.32.0
+  resources:
+    requests: { cpu: 20m, memory: 32Mi }
+    limits: { cpu: 100m, memory: 128Mi }
