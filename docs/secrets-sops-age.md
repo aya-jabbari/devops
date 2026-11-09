@@ -79,6 +79,10 @@ Gitleaks complète ce contrôle sur tout le dépôt.
    (`kubectl -n supportops rollout restart deploy`).
 7. Mettre à jour la clé privée stockée dans le cluster (voir « Argo CD » ci-dessous).
 
+**Rejouée le 9 novembre 2026** sur une copie temporaire du fichier chiffré (aucune vraie clé touchée) : après les étapes
+2 et 3, l'ancienne et la nouvelle clé déchiffrent toutes deux ; après l'étape 4, l'ancienne clé est **refusée** et la
+nouvelle déchiffre toujours.
+
 ## Argo CD (à finaliser avec Doha)
 
 Argo CD doit pouvoir déchiffrer. Piste : stocker la clé privée Age dans un Secret du cluster, lu par un plugin

@@ -85,3 +85,27 @@ jobs:
           ignore-unfixed: true
           severity: CRITICAL,HIGH
           trivyignores: .trivyignore
+
+  terraform:
+    name: Terraform fmt and validate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infrastructure/terraform
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Check formatting
+        run: terraform fmt -check -recursive
+
+      - name: Init (no backend, no credentials)
+        run: terraform init -backend=false -input=false
+
+      - name: Validate
+        run: terraform validate
