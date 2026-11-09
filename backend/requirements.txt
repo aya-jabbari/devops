@@ -10,3 +10,4 @@ celery==5.6.3
 packaging==25.0  # imported by kombu's redis transport but not declared by it
 redis==6.4.0
 packaging>=24.0
+prometheus-client==0.21.1

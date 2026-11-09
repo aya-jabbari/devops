@@ -2,7 +2,7 @@
 and Maryam (incidents: add columns/tables via a migration, do not edit existing ones silently)."""
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .db import Base
