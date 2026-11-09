@@ -39,7 +39,7 @@ jobs:
         run: python -m compileall -q app
 
       - name: Run lint
-        run: python -m ruff check app tests
+        run: python -m ruff check app ../tests
 
       - name: Run tests
         working-directory: .
@@ -124,7 +124,7 @@ jobs:
         run: docker build -t supportops-backend:ci ./backend
 
       - name: Scan image
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: supportops-backend:ci
           format: table
