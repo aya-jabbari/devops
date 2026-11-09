@@ -1,0 +1,8 @@
+# SOPS rules. Only PUBLIC age keys live here (safe to commit).
+# Each team member adds their public key: Doha and Maryam run `age-keygen`
+# and send Aya the "age1..." line, then `sops updatekeys` is run (see docs/secrets-sops-age.md).
+creation_rules:
+  - path_regex: deploy/secrets/.*\.enc\.yaml$
+    encrypted_regex: '^(data|stringData)$'
+    age: >-
+      age10slq2ksk7yvjvkefxe45tdkhkznlczmgpuuecynajsjzdlz5qgmqhau48p
