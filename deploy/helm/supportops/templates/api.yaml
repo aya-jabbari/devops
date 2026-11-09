@@ -17,6 +17,13 @@ spec:
         {{- include "supportops.labels" . | nindent 8 }}
         app.kubernetes.io/component: api
     spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: {{ .Values.postgres.image }}
+          command: ["sh", "-c", "until pg_isready -h postgres -p 5432; do echo waiting for postgres; sleep 2; done"]
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { cpu: 50m, memory: 64Mi }
       containers:
         - name: api
           image: {{ include "supportops.image" . }}
