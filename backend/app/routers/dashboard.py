@@ -34,5 +34,5 @@ def dashboard(db: Session = Depends(get_db), _: User = Depends(require_roles(*ST
         "unassigned": db.scalar(select(func.count()).where(active, Ticket.technician_id.is_(None))) or 0,
         "incidents": db.scalar(select(func.count()).where(active, Ticket.source == "monitoring")) or 0,
         "priorities": {p: by_priority.get(p, 0) for p in PRIORITIES},
-        "workload": [{"technician_id": i, "name": n, "active": a, "late": int(l)} for i, n, a, l in workload],
+        "workload": [{"technician_id": i, "name": n, "active": a, "late": int(late)} for i, n, a, late in workload],
     }

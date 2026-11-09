@@ -75,6 +75,7 @@ Tant qu'il n'est pas disponible : un `values-dev.yaml` généré localement, **n
 | `POST /api/webhooks/alertmanager` | webhook, en-tête `Authorization: Bearer <ALERTMANAGER_WEBHOOK_SECRET>` |
 | `GET /api/incidents` | incidents |
 | `GET /metrics` | **à ajouter (Maryam)** : métriques Prometheus |
+| `GET /metrics` | métriques Prometheus |
 
 ## 5. Métriques exposées par l'API (Maryam)
 
@@ -84,6 +85,7 @@ Tant qu'il n'est pas disponible : un `values-dev.yaml` généré localement, **n
 | `http_request_duration_seconds` | histogramme | `service` |
 
 > Non implémentées à ce jour (aucune instrumentation dans `backend/app/`).
+> Implémentées dans `backend/app/main.py`.
 
 ### Requête PromQL de référence : taux d'erreurs 5xx
 
@@ -93,6 +95,9 @@ Utilisée **telle quelle** par l'AnalysisTemplate (Doha) et par les alertes (Mar
 sum(rate(http_requests_total{service="api",status=~"5.."}[1m]))
 /
 sum(rate(http_requests_total{service="api"}[1m]))
+sum(rate(http_requests_total{service="api",status=~"5.."}[2m]))
+/
+sum(rate(http_requests_total{service="api"}[2m]))
 ```
 
 Seuil d'abandon du canary : **0,02 (2 %)**.
@@ -120,6 +125,7 @@ Format : `ghcr.io/<organisation>/supportops-<composant>:<sha>`
 | Organisation GHCR | `aya-jabbari` | Valeur actuelle de `values.yaml`. À changer ici et dans `values.yaml` si le dépôt passe sous une organisation. |
 | Clés `POSTGRES_*` | Ajoutées à `supportops-secrets` | Le pod PostgreSQL en a besoin. |
 | Métriques et `/metrics` | Maryam les ajoute | Absentes du code à ce jour. |
+| Métriques et `/metrics` | Maryam les maintient | Instrumentation active dans `backend/app/main.py`. |
 | Fournisseur cloud, région | Choix d'Aya, à renseigner ici dès qu'il est fait | Ne bloque personne : les alternatives du §8 s'appliquent. |
 
 ## 8. Responsabilités de livraison
