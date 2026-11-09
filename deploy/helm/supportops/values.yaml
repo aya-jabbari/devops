@@ -65,6 +65,14 @@ frontendImage:
 
 api:
   replicas: 1
+  imageTag: ""            # empty = backendImage.tag; set it to roll out only the API
+  rollout:
+    enabled: false        # true = Argo Rollouts canary instead of a plain Deployment
+    steps:
+      - setWeight: 20
+      - pause: {}         # waits for a manual "promote" until the AnalysisTemplate is wired
+      - setWeight: 50
+      - pause: { duration: 30s }
   resources:
     requests: { cpu: 100m, memory: 192Mi }
     limits: { cpu: 500m, memory: 384Mi }
