@@ -1,0 +1,32 @@
+groups:
+  - name: supportops-alerts
+    rules:
+      - alert: HighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[2m])) / sum(rate(http_requests_total[2m])) > 0.05
+        for: 1m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "Taux d'erreurs 5xx supérieur à 5% sur le service backend"
+          grafana_url: "http://localhost:3000/d/supportops-overview"
+
+      - alert: BackendServiceDown
+        expr: up{job="supportops-backend"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "Le service backend est indisponible"
+          grafana_url: "http://localhost:3000/d/supportops-overview"
+
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[2m])) by (le)) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "Latence P95 supérieure à 500ms sur l'API"
+          grafana_url: "http://localhost:3000/d/supportops-overview"
