@@ -1,24 +1,24 @@
 output "public_ip" {
   description = "Public IPv4 of the K3s server."
-  value       = hcloud_primary_ip.server.ip_address
+  value       = aws_eip.server.public_ip
 }
 
 output "ssh_command" {
-  description = "SSH into the server."
-  value       = "ssh root@${hcloud_primary_ip.server.ip_address}"
+  description = "SSH into the server (Ubuntu AMIs allow the ubuntu user, not root)."
+  value       = "ssh ubuntu@${aws_eip.server.public_ip}"
 }
 
 output "kubernetes_api" {
   description = "Kubernetes API endpoint."
-  value       = "https://${hcloud_primary_ip.server.ip_address}:6443"
+  value       = "https://${aws_eip.server.public_ip}:6443"
 }
 
 output "argocd_url" {
   description = "Argo CD UI, once Argo CD is exposed on the NodePort (admin IPs only)."
-  value       = "https://${hcloud_primary_ip.server.ip_address}:${var.argocd_node_port}"
+  value       = "https://${aws_eip.server.public_ip}:${var.argocd_node_port}"
 }
 
 output "kubeconfig_command" {
   description = "Fetch the kubeconfig (wait ~2 minutes after apply for K3s to be ready)."
-  value       = "scripts/get-kubeconfig.sh ${hcloud_primary_ip.server.ip_address}"
+  value       = "SSH_USER=ubuntu scripts/get-kubeconfig.sh ${aws_eip.server.public_ip}"
 }
