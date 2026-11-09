@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: supportops
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/aya-jabbari/devops.git
+    targetRevision: feat/doha-helm-contract   # switch to main once the PR is merged
+    path: deploy/helm/supportops
+    helm:
+      releaseName: supportops
+      valueFiles:
+        - ../../environments/dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: supportops
+  syncPolicy:
+    automated:
+      prune: true       # resources removed from Git are removed from the cluster
+      selfHeal: true    # manual changes in the cluster are reverted to what Git says
+    syncOptions:
+      - CreateNamespace=true
