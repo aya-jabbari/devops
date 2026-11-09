@@ -5,6 +5,7 @@
 *.pem
 *.key
 age.key
+values-dev.yaml
 
 # --- Python (backend) ---
 __pycache__/
