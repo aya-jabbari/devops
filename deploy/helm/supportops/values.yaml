@@ -62,6 +62,20 @@ serviceMonitor:
   enabled: false
   interval: 30s
 
+backupCronJob:
+  enabled: false
+  schedule: "0 2 * * *"   # daily at 02:00 UTC
+  retentionCount: 7
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: ""
+  resources:
+    requests: { cpu: 50m, memory: 64Mi }
+    limits: { cpu: 200m, memory: 256Mi }
+
 frontendImage:
   repository: ghcr.io/aya-jabbari/supportops-frontend
   tag: dev
