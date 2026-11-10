@@ -62,24 +62,6 @@ serviceMonitor:
   enabled: false
   interval: 30s
 
-# PostgreSQL. Credentials come from the existing Secret (keys POSTGRES_USER,
-# POSTGRES_PASSWORD, POSTGRES_DB), never from values.
-postgres:
-  image: postgres:17-alpine
-  persistence:
-    enabled: true          # false = emptyDir (Kind tests, data lost with the pod)
-    size: 5Gi
-    storageClass: ""       # "" = cluster default (local-path on K3s)
-  resources:
-    requests: { cpu: 100m, memory: 256Mi }
-    limits: { cpu: 500m, memory: 512Mi }
-
-mailpit:
-  image: axllent/mailpit:v1.32.0
-  resources:
-    requests: { cpu: 25m, memory: 32Mi }
-    limits: { cpu: 100m, memory: 128Mi }
-
 frontendImage:
   repository: ghcr.io/aya-jabbari/supportops-frontend
   tag: dev
