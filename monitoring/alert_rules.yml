@@ -30,3 +30,28 @@ groups:
         annotations:
           summary: "Latence P95 supérieure à 500ms sur l'API"
           grafana_url: "http://localhost:3000/d/supportops-overview"
+
+  - name: supportops-storage
+    rules:
+      - alert: PersistentVolumeAlmostFull
+        expr: |
+          kubelet_volume_stats_available_bytes{namespace="supportops"}
+            / kubelet_volume_stats_capacity_bytes{namespace="supportops"} < 0.15
+        for: 5m
+        labels:
+          severity: warning
+          service: storage
+        annotations:
+          summary: "Volume {{ $labels.persistentvolumeclaim }} rempli à plus de 85 %"
+          grafana_url: "http://localhost:3000/d/supportops-overview"
+
+      - alert: PersistentVolumeFillingUp
+        expr: |
+          predict_linear(kubelet_volume_stats_available_bytes{namespace="supportops"}[6h], 24 * 3600) < 0
+        for: 30m
+        labels:
+          severity: critical
+          service: storage
+        annotations:
+          summary: "Volume {{ $labels.persistentvolumeclaim }} plein dans moins de 24 h au rythme actuel"
+          grafana_url: "http://localhost:3000/d/supportops-overview"

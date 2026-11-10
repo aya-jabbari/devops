@@ -1,0 +1,28 @@
+# Overrides for the real infrastructure (single K3s node on Hetzner, see infrastructure/terraform/).
+#   helm upgrade --install supportops deploy/helm/supportops -f deploy/environments/prod.yaml \
+#     --set backendImage.tag=<commit-sha>
+# No secret here: supportops-secrets is applied from deploy/secrets/ (SOPS + Age).
+# Written with Aya (data/persistence) ; Doha owns the rest of the chart. Sizes to confirm on the real VM.
+backendImage:
+  repository: ghcr.io/aya-jabbari/supportops-backend
+  tag: latest-must-be-overridden     # CI sets the commit SHA: never deploy this placeholder
+  pullPolicy: IfNotPresent
+
+postgres:
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: local-path         # K3s default; single node, so the volume is local to the VM
+  resources:
+    requests: { cpu: 200m, memory: 384Mi }
+    limits: { cpu: 750m, memory: 768Mi }
+
+redis:
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: local-path
+
+worker:
+  replicas: 1
+  concurrency: 2
