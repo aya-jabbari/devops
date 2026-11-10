@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
+from prometheus_client import Counter
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
@@ -12,6 +13,12 @@ from ..schemas import (AssignIn, CommentIn, CommentOut, StatusIn, TicketCreate, 
                        TicketOut, TicketUpdate)
 
 router = APIRouter(prefix="/api/tickets", tags=["tickets"])
+
+TICKET_OPERATIONS = Counter(
+    "supportops_ticket_operations_total",
+    "Total ticket domain operations",
+    ("operation",),
+)
 
 # open -> in_progress -> resolved -> closed ; reopen allowed after resolution.
 TRANSITIONS = {
@@ -44,6 +51,7 @@ def create_ticket(data: TicketCreate, db: Session = Depends(get_db), user: User 
     db.flush()
     log(db, t, user, "created")
     db.commit()
+    TICKET_OPERATIONS.labels(operation="created").inc()
     return t
 
 
@@ -114,6 +122,7 @@ def change_status(ticket_id: int, data: StatusIn, db: Session = Depends(get_db),
         t.resolved_at = None
     log(db, t, user, "status_changed", "status", old, new)
     db.commit()
+    TICKET_OPERATIONS.labels(operation=f"status_{new}").inc()
     if new == "resolved":
         notify("resolved", t.id, ref=t.resolved_at.isoformat())
     return t
@@ -139,6 +148,7 @@ def assign(ticket_id: int, data: AssignIn, db: Session = Depends(get_db),
     log(db, t, user, "assigned", "technician", old, target.username if target else None)
     db.commit()
     db.refresh(t)
+    TICKET_OPERATIONS.labels(operation="assigned").inc()
     if target:
         notify("assigned", t.id, ref=t.updated_at.isoformat())
     return t
@@ -154,5 +164,6 @@ def add_comment(ticket_id: int, data: CommentIn, db: Session = Depends(get_db),
     db.add(c)
     log(db, t, user, "commented")
     db.commit()
+    TICKET_OPERATIONS.labels(operation="commented").inc()
     notify("commented", t.id, comment_id=c.id)
     return c

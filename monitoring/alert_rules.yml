@@ -2,7 +2,7 @@ groups:
   - name: supportops-alerts
     rules:
       - alert: HighErrorRate
-        expr: sum(rate(http_requests_total{status=~"5.."}[2m])) / sum(rate(http_requests_total[2m])) > 0.05
+        expr: sum(rate(http_requests_total{service="api",status=~"5.."}[2m])) / sum(rate(http_requests_total{service="api"}[2m])) > 0.05
         for: 1m
         labels:
           severity: critical

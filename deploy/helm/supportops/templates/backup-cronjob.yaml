@@ -1,0 +1,83 @@
+{{- if .Values.backupCronJob.enabled }}
+{{- if .Values.backupCronJob.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backups
+  labels:
+    {{- include "supportops.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- if .Values.backupCronJob.persistence.storageClass }}
+  storageClassName: {{ .Values.backupCronJob.persistence.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.backupCronJob.persistence.size }}
+---
+{{- end }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "supportops.fullname" . }}-db-backup
+  labels:
+    {{- include "supportops.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backup
+spec:
+  schedule: {{ .Values.backupCronJob.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: {{ .Values.backupCronJob.successfulJobsHistoryLimit | default 3 }}
+  failedJobsHistoryLimit: {{ .Values.backupCronJob.failedJobsHistoryLimit | default 1 }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "supportops.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: backup
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: pg-backup
+              image: {{ .Values.postgres.image }}
+              command:
+                - sh
+                - -c
+                - |
+                  set -euo pipefail
+                  STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+                  OUT="/backups/supportops-${STAMP}.dump"
+                  PGPASSWORD="$POSTGRES_PASSWORD" pg_dump -h postgres -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Fc > "${OUT}.tmp"
+                  if [ ! -s "${OUT}.tmp" ]; then
+                    rm -f "${OUT}.tmp"
+                    echo "ERROR: dump is empty" >&2
+                    exit 1
+                  fi
+                  mv "${OUT}.tmp" "${OUT}"
+                  chmod 600 "${OUT}"
+                  # Retain last {{ .Values.backupCronJob.retentionCount | default 7 }} backups
+                  ls -1t /backups/supportops-*.dump 2>/dev/null | tail -n +{{ add (int (.Values.backupCronJob.retentionCount | default 7)) 1 }} | xargs -r rm -f
+                  echo "Backup completed: ${OUT}"
+              env:
+                {{- range $key := list "POSTGRES_USER" "POSTGRES_PASSWORD" "POSTGRES_DB" }}
+                - name: {{ $key }}
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.secrets.existingSecret }}
+                      key: {{ $key }}
+                {{- end }}
+              volumeMounts:
+                - name: backups
+                  mountPath: /backups
+              resources:
+                {{- toYaml .Values.backupCronJob.resources | nindent 16 }}
+          volumes:
+            - name: backups
+              {{- if .Values.backupCronJob.persistence.enabled }}
+              persistentVolumeClaim:
+                claimName: postgres-backups
+              {{- else }}
+              emptyDir: {}
+              {{- end }}
+{{- end }}
