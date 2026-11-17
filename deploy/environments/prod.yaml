@@ -1,4 +1,4 @@
-# Overrides for the real infrastructure (single K3s node on Hetzner, see infrastructure/terraform/).
+# Overrides for the real infrastructure (single K3s node on AWS EC2, see infrastructure/terraform/).
 #   helm upgrade --install supportops deploy/helm/supportops -f deploy/environments/prod.yaml \
 #     --set backendImage.tag=<commit-sha>
 # No secret here: supportops-secrets is applied from deploy/secrets/ (SOPS + Age).
