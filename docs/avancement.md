@@ -1,6 +1,6 @@
 # Avancement : pôle Aya (Cloud, données et résilience)
 
-Mis à jour le 9 novembre 2026 (fin de la semaine 3). Référence : cahier des charges v2.1 (§5, §6, §7).
+Mis à jour le 17 novembre 2026 (semaine 4). Référence : cahier des charges v2.1 (§5, §6, §7).
 
 Légende : ✅ fait et vérifié · 🟡 écrit mais pas complètement vérifié ou pas encore fusionné · ⬜ pas commencé
 
@@ -56,10 +56,11 @@ test de connexion à Redis). Les pods Redis, PostgreSQL, Mailpit et scheduler so
 
 ## Ce qui reste à faire
 
-### Dépend d'un compte cloud (décision à prendre avant la semaine 4)
+### Sur AWS (semaine 4)
 
-Une demande de jeton d'API Hetzner a été envoyée à une coéquipière (projet Hetzner dédié, droits lecture/écriture, jeton
-transmis en privé, jamais dans Git). Tant qu'il n'est pas reçu :
+Le code Terraform cible maintenant **AWS** (compte disponible dans l'équipe, région `eu-west-3`, `t3.medium`). Avant le
+premier `apply` : utilisateur IAM dédié, clés d'accès uniquement dans l'environnement, budget AWS avec alerte e-mail
+(voir `infrastructure/terraform/README.md`).
 
 | # | Tâche | Critère de réussite |
 |---|---|---|
@@ -68,8 +69,6 @@ transmis en privé, jamais dans Git). Tant qu'il n'est pas reçu :
 | 3 | Rapport de coûts réels | « Maîtrise des coûts » |
 | 4 | Acte 1 de la démonstration (plan Terraform, K3s, secrets déchiffrés) | Acte 1 |
 
-Pistes gratuites si le compte n'arrive pas : Azure for Students, crédits étudiants GitHub. Seul le fichier fournisseur
-Terraform changerait.
 
 ### Avec les coéquipières
 
@@ -89,7 +88,7 @@ Terraform changerait.
 ## Écarts assumés par rapport au cahier des charges
 
 - PostgreSQL 17 et Redis 8 au lieu de 16 et 7 : déjà utilisés dans Compose et le chart (voir `docs/interfaces.md` §7).
-- Fournisseur cloud : Hetzner dans le code Terraform, faute d'indication du cahier des charges. À remplacer si un autre compte est obtenu.
+- Fournisseur cloud : AWS (une instance EC2, un seul nœud K3s), faute d'indication du cahier des charges. La première version Hetzner reste dans l'historique Git.
 - Certificat TLS auto-signé : pas de nom de domaine. Cert-manager + Let's Encrypt si un domaine est obtenu.
 
 ## Risques connus
