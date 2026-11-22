@@ -81,3 +81,8 @@ def test_filters_and_search(client, login):
     assert len(client.get("/api/tickets?q=printer", headers=h).json()) == 1
     assert client.get(f"/api/tickets?q={a['id']}", headers=h).json()[0]["id"] == a["id"]
     assert client.get("/api/tickets?status=closed", headers=h).json() == []
+
+
+def test_ci_blocking_check():
+    assert False
+
