@@ -1,6 +1,6 @@
 # Overrides for the real infrastructure (single K3s node on AWS EC2, see infrastructure/terraform/).
 #   helm upgrade --install supportops deploy/helm/supportops -f deploy/environments/prod.yaml \
-#     --set backendImage.tag=<commit-sha>
+#     --set backendImage.tag=<commit-sha> --set frontendImage.tag=<commit-sha>
 # No secret here: supportops-secrets is applied from deploy/secrets/ (SOPS + Age).
 # Written with Aya (data/persistence) ; Doha owns the rest of the chart. Sizes to confirm on the real VM.
 backendImage:
@@ -26,3 +26,13 @@ redis:
 worker:
   replicas: 1
   concurrency: 2
+
+frontendImage:
+  repository: ghcr.io/aya-jabbari/supportops-frontend
+  tag: latest-must-be-overridden     # same commit SHA as the backend
+  pullPolicy: IfNotPresent
+
+ingress:
+  enabled: true
+  className: traefik                 # K3s ships Traefik (no nginx ingress controller)
+  host: ""                           # no domain yet: match any host on the Elastic IP

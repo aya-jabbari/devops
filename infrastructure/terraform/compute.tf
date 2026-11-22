@@ -46,6 +46,16 @@ resource "aws_instance" "k3s" {
   # cloud-init only runs on first boot: a changed script must replace the server.
   user_data_replace_on_change = true
 
+  lifecycle {
+    ignore_changes = [
+      # Once the Elastic IP is associated, AWS reports a public IP and the provider reads true:
+      # without this, every plan would replace the server (and wipe the K3s data on it).
+      associate_public_ip_address,
+      # A newer Canonical AMI must not replace a running server; it is picked up at the next create.
+      ami,
+    ]
+  }
+
   tags = { Name = "${var.project_name}-k3s" }
 }
 

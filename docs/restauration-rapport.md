@@ -26,10 +26,34 @@ des données, restauration, comparaison.
 
 Le script sort en erreur si les comptes diffèrent avant et après.
 
+## Rejeu sur AWS (22 novembre 2026)
+
+Cluster réel : une instance EC2 `m7i-flex.large` en `eu-north-1`, K3s v1.30.5, StorageClass `local-path`, application
+déployée par le chart avec `deploy/environments/prod.yaml` (images GHCR `9611e35`), Secret appliqué depuis SOPS.
+
+### Persistance PostgreSQL (critère « Persistance PVC »)
+
+| Étape | Résultat |
+|---|---|
+| Avant | 5 utilisateurs, 4 tickets, empreinte MD5 des titres `0d0daae3…` |
+| Suppression du pod PostgreSQL | Nouveau pod prêt en **8 s**, même PVC `postgres-data` (10 Gi, `Bound`) |
+| Après | 5 utilisateurs, 4 tickets, même empreinte : **données intactes** |
+
+### Acte 5 (`scripts/demo-acte5.sh`)
+
+| Étape | Résultat |
+|---|---|
+| Sauvegarde | `backups/supportops-20261122T125744Z.dump`, 23 076 octets |
+| Suppression du pod Redis | Recréé par Kubernetes en **5 s** |
+| Destruction volontaire | `TRUNCATE tickets CASCADE` (cascade sur incidents, comments, ticket_events, notifications) : 0 ticket |
+| Restauration sur base vierge | Base supprimée, recréée et restaurée en **6 s** |
+| État final | 5 utilisateurs, 4 tickets, 4 événements, 1 notification : **aucune perte** |
+| Application après restauration | Connexion `user1` via Traefik OK, aucun pod redémarré |
+
 ## Limites connues
 
 - Jeu de données de démonstration (quelques lignes) : la durée de 4 s ne se généralise pas à une grosse base.
-- Test sur k3d, pas sur la VM cloud (aucun compte cloud à ce jour). À rejouer sur la VM pour l'acte 5 de la soutenance.
+- ~~Test sur k3d uniquement~~ : rejoué sur AWS le 22 novembre 2026 (voir plus haut).
 - Les tables `comments` et `incidents` étaient vides au moment du test : leur restauration n'est donc pas prouvée par les comptes.
 - Les sauvegardes restent sur le poste (`backups/`, ignoré par Git). Une copie hors machine reste à prévoir.
 

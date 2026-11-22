@@ -16,8 +16,7 @@ Ubuntu 24.04 ; **cloud-init** y installe K3s sans intervention. Cette version re
 ```bash
 cd infrastructure/terraform
 cp terraform.tfvars.example terraform.tfvars      # ignoré par Git ; renseigner admin_cidrs (votre IP : curl -4 ifconfig.me)
-export AWS_ACCESS_KEY_ID="..."                    # uniquement dans l'environnement du terminal
-export AWS_SECRET_ACCESS_KEY="..."
+export AWS_PROFILE=supportops                     # profil créé par `aws configure --profile supportops` (~/.aws, hors dépôt)
 
 terraform init
 terraform plan
@@ -50,15 +49,23 @@ une IP élastique ou un volume orphelin continue d'être facturé. Le disque rac
 
 ## Coût indicatif
 
-`t3.medium` (2 vCPU, 4 Go) est facturé à l'heure (quelques centimes), plus le disque gp3 de 30 Go et l'adresse IPv4 publique,
+`m7i-flex.large` (2 vCPU, 8 Go) est facturé à l'heure (une dizaine de centimes, couverts par les crédits du Free plan), plus le disque gp3 de 30 Go et l'adresse IPv4 publique,
 facturée à l'heure elle aussi. Une session de quelques heures coûte peu, une instance laissée allumée coûte quelques dizaines
 d'euros par mois. `t3.micro` (1 Go) est trop petit pour K3s et la pile complète. Relever les prix réels dans la console avant
 le premier `apply` et les consigner dans le rapport de coûts final.
 
 ## État de vérification
 
-`terraform fmt -check` et `terraform validate` passent. **`plan` et `apply` n'ont jamais été exécutés** : `instance_type`,
-`k3s_version` et l'AMI (recherche Canonical) sont à confirmer au premier `plan`. Région par défaut : `eu-west-3` (Paris).
+`terraform fmt -check` et `terraform validate` passent. **`plan` exécuté le 22 novembre 2026** sur le compte de l'équipe :
+16 ressources à créer, AMI Ubuntu 24.04 trouvée. **`apply` exécuté le même jour** : K3s v1.30.5 `Ready` environ 1 minute après
+la création de l'instance, kubeconfig récupéré par `scripts/get-kubeconfig.sh`, Traefik répond sur le port 80. `destroy` exécuté ensuite : 16 ressources supprimées, rien de facturable restant
+(voir `docs/rapport-couts.md`).
+
+Région : `eu-north-1` (Stockholm). Le compte est sur le **Free plan** AWS, qui le verrouille sur une seule région ; les autres
+régions renvoient un refus explicite (politique d'organisation AWS). Les crédits du Free plan couvrent EC2.
+Type d'instance : `m7i-flex.large`. Le Free plan refuse au lancement tout type non éligible (`t3.medium` : « not eligible for
+Free Tier ») ; `run-instances --dry-run` ne détecte pas ce refus. Lister les types acceptés :
+`aws ec2 describe-instance-types --filters Name=free-tier-eligible,Values=true`.
 
 ## Contrôle de CI
 
