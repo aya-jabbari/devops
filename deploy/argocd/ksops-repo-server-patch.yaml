@@ -1,0 +1,36 @@
+# KSOPS in Argo CD: lets argocd-repo-server decrypt SOPS files during `kustomize build`.
+# Proposed by Aya (SOPS + Age), to be reviewed and applied by Doha (Argo CD). Follows the KSOPS README.
+# Apply after the official Argo CD install and after scripts/argocd-age-key.sh:
+#   kubectl -n argocd patch deployment argocd-repo-server --patch-file deploy/argocd/ksops-repo-server-patch.yaml
+#   kubectl -n argocd patch configmap argocd-cm --type merge \
+#     -p '{"data":{"kustomize.buildOptions":"--enable-alpha-plugins --enable-exec"}}'
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-repo-server
+  namespace: argocd
+spec:
+  template:
+    spec:
+      initContainers:
+        # Copies the ksops and kustomize binaries into a shared volume (same version as the local check).
+        - name: install-ksops
+          image: viaductoss/ksops:v4.5.1
+          command: ["/bin/sh", "-c"]
+          args: ["mv ksops kustomize /custom-tools/"]
+          volumeMounts:
+            - { name: custom-tools, mountPath: /custom-tools }
+      containers:
+        - name: argocd-repo-server
+          env:
+            - { name: XDG_CONFIG_HOME, value: /.config }
+            - { name: SOPS_AGE_KEY_FILE, value: /.config/sops/age/keys.txt }
+          volumeMounts:
+            - { name: custom-tools, mountPath: /usr/local/bin/kustomize, subPath: kustomize }
+            - { name: custom-tools, mountPath: /usr/local/bin/ksops, subPath: ksops }
+            - { name: sops-age, mountPath: /.config/sops/age, readOnly: true }
+      volumes:
+        - { name: custom-tools, emptyDir: {} }
+        - name: sops-age
+          secret:
+            secretName: sops-age   # created by scripts/argocd-age-key.sh, never in Git

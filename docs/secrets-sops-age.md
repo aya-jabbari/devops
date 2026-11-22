@@ -83,8 +83,57 @@ Gitleaks complète ce contrôle sur tout le dépôt.
 2 et 3, l'ancienne et la nouvelle clé déchiffrent toutes deux ; après l'étape 4, l'ancienne clé est **refusée** et la
 nouvelle déchiffre toujours.
 
-## Argo CD (à finaliser avec Doha)
+## Argo CD : déchiffrement dans le cluster avec KSOPS
 
-Argo CD doit pouvoir déchiffrer. Piste : stocker la clé privée Age dans un Secret du cluster, lu par un plugin
-SOPS (ksops ou helm-secrets). Cette clé est un **secret de plateforme** : elle est créée à la main une seule fois
-(jamais dans Git) et fait partie de la procédure de rotation ci-dessus.
+Objectif : qu'un push sur `main` mette à jour le Secret `supportops-secrets` **sans** `scripts/secrets-apply.sh`
+(acte 1 « sans manipulation manuelle »). `secrets-apply.sh` reste le plan B (§5.2) si Argo CD n'est pas disponible.
+
+### Choix : KSOPS plutôt que helm-secrets
+
+- Le Secret est déployé par une **Application Argo CD séparée** (`supportops-secrets`, chemin `deploy/secrets`) :
+  le chart Helm de Doha ne contient aucun secret et n'est pas modifié.
+- KSOPS est un générateur Kustomize : Argo CD lance `kustomize build`, KSOPS déchiffre le fichier SOPS en mémoire
+  avec la clé Age montée dans `argocd-repo-server`. Le Secret en clair n'existe que dans le cluster.
+- helm-secrets demanderait de passer les secrets comme valeurs Helm et de modifier le chart : plus intrusif.
+
+### Fichiers
+
+| Fichier | Rôle | Pôle |
+|---|---|---|
+| `deploy/secrets/kustomization.yaml`, `secret-generator.yaml` | Générateur KSOPS sur `supportops-secrets.enc.yaml` | Aya |
+| `scripts/argocd-age-key.sh` | Crée le Secret `sops-age` (clé privée Age) dans le namespace `argocd` | Aya |
+| `scripts/check-secrets-encrypted.sh` | Accepte la configuration KSOPS, refuse qu'elle contienne des valeurs | Aya |
+| `deploy/argocd/ksops-repo-server-patch.yaml` | Installe `ksops` et `kustomize` dans `argocd-repo-server`, monte la clé | proposé par Aya, **à valider par Doha** |
+| `deploy/argocd/application-secrets.yaml` | Application Argo CD du Secret | proposé par Aya, **à valider par Doha** |
+
+### Mise en place sur un cluster (une fois, après l'installation d'Argo CD)
+
+```bash
+scripts/argocd-age-key.sh                                   # 1. clé Age -> Secret sops-age (Aya, clé jamais dans Git)
+kubectl -n argocd patch deployment argocd-repo-server \
+  --patch-file deploy/argocd/ksops-repo-server-patch.yaml   # 2. KSOPS dans le repo-server (Doha)
+kubectl -n argocd patch configmap argocd-cm --type merge \
+  -p '{"data":{"kustomize.buildOptions":"--enable-alpha-plugins --enable-exec"}}'
+kubectl -n argocd rollout status deploy/argocd-repo-server
+kubectl apply -f deploy/argocd/application-secrets.yaml     # 3. Application du Secret
+kubectl -n argocd get application supportops-secrets        # attendu : Synced, Healthy
+```
+
+La clé Age est un **secret de plateforme** : créée une seule fois par cluster, jamais dans Git. Après une rotation
+(étape 7 ci-dessus), relancer `scripts/argocd-age-key.sh` puis `kubectl -n argocd rollout restart deploy/argocd-repo-server`.
+
+### Vérification
+
+**Faite le 22 novembre 2026, en local** avec KSOPS v4.5.1 et kustomize v5.8.1, la même commande que celle d'Argo CD :
+
+```bash
+kustomize build --enable-alpha-plugins --enable-exec deploy/secrets
+```
+
+- Avec la bonne clé : un Secret `supportops-secrets` (namespace `supportops`) dont les six valeurs sont identiques à
+  `sops -d` (empreintes SHA-256 comparées, aucune valeur affichée).
+- Avec une autre clé Age, ou sans clé : la construction échoue (code 1). Argo CD afficherait l'Application en erreur
+  au lieu de déployer un Secret vide.
+
+**Reste à faire avec Doha, sur le cluster AWS** : appliquer le patch du repo-server et l'Application, vérifier
+`Synced/Healthy`, puis modifier une valeur chiffrée sur `main` et constater la mise à jour du Secret sans `kubectl`.
