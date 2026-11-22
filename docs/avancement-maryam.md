@@ -1,6 +1,6 @@
 # Avancement : pôle Maryam (CI/CD, observabilité et performance)
 
-Mis à jour le 10 novembre 2026 (fin de la semaine 3). Référence : cahier des charges v2.1 (§2.4, §3.1, §4.1, §5, §6, §7).
+Mis à jour le 22 novembre 2026 (fin de la semaine 3 validée). Référence : cahier des charges v2.1 (§2.4, §3.1, §4.1, §5, §6, §7).
 
 Légende : ✅ fait et vérifié · 🟡 écrit mais en attente d'intégration finale · ⬜ prévu en semaine 4/5
 
@@ -38,8 +38,8 @@ Légende : ✅ fait et vérifié · 🟡 écrit mais en attente d'intégration f
 | Livrable (§5 / §6) | État | Fichiers | Vérification |
 |---|---|---|---|
 | Règles d'alerte Prometheus (`alert_rules.yml`) | ✅ | `monitoring/alert_rules.yml` | Règles `HighErrorRate` (> 5 % de 5xx sur 2 min), `BackendServiceDown` (`up == 0`) et `HighLatency` (P95 > 500 ms) alignées sur le contrat PromQL. |
-| Alerte espace disque des PVC (§5.3, binôme avec Aya) | ✅ | `monitoring/alert_rules.yml` | Groupe `supportops-storage` : `PersistentVolumeAlmostFull` (< 15 % libre) et `PersistentVolumeFillingUp` (prédiction linéaire à 24 h). |
-| Configuration du routage Alertmanager | ✅ | `monitoring/alertmanager.yml` | Récepteur `supportops-webhook` configuré avec `send_resolved: true` et jeton Bearer vers `/api/webhooks/alertmanager`. |
+| Alerte espace disque des PVC (§5.3, binôme avec Aya) | ✅ | `monitoring/alert_rules.yml`, `monitoring/prometheusrule-storage.yaml` | Groupe `supportops-storage` : `PersistentVolumeAlmostFull` (< 15 % libre) et `PersistentVolumeFillingUp` (prédiction linéaire à 24 h) ; validé avec `promtool` et chargé dans Prometheus sur Minikube (`kubelet_volume_stats_*` vérifiées sur `redis-data`). |
+| Configuration du routage Alertmanager | ✅ | `monitoring/alertmanager.yml`, `compose.yaml` | Récepteur `supportops-webhook` configuré avec `send_resolved: true` et jeton Bearer vers `/api/webhooks/alertmanager`. Validé de bout en bout (`prom/alertmanager` → `supportops-backend-1`) : alerte `firing` répétée sans doublon (`Count: 1`), passage à `recovered` sur `resolved` et clôture technicien (`closed`). |
 | Intégration des contrôles de sécurité dans la CI | ✅ | `.github/workflows/ci.yml`, `.github/workflows/security.yml` | Scan de secrets **Gitleaks** (`fetch-depth: 0`), scan d'image **Trivy** (`CRITICAL,HIGH`, `exit-code: "1"`) et appel du workflow réutilisable `security.yml`. |
 | Dashboard Grafana exporté en JSON (Golden Signals) | ✅ | `monitoring/dashboards/supportops-overview.json` | 7 panneaux (`uid: supportops-overview`) : Requêtes/s, Taux d'erreurs 5xx (seuils 2 % et 5 %), Latence P95/P50, CPU par pod, Mémoire par pod, Redémarrages de pods, Activité métier des tickets. |
 | Template Helm `ServiceMonitor` (§5.3, binôme avec Doha) | ✅ | `deploy/helm/supportops/templates/servicemonitor.yaml`, `values.yaml` | Cible le service `api` sur `/metrics` (port `http`) dans le namespace `supportops` ; déployé et validé sur le cluster local. |
