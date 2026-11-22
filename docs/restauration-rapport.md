@@ -54,7 +54,10 @@ déployée par le chart avec `deploy/environments/prod.yaml` (images GHCR `9611e
 
 - Jeu de données de démonstration (quelques lignes) : la durée de 4 s ne se généralise pas à une grosse base.
 - ~~Test sur k3d uniquement~~ : rejoué sur AWS le 22 novembre 2026 (voir plus haut).
-- Les tables `comments` et `incidents` étaient vides au moment du test : leur restauration n'est donc pas prouvée par les comptes.
+- Les tables `comments` et `incidents` étaient vides lors des tests du 9 et du 22 novembre. Depuis, `demo-acte5.sh` crée d'abord
+  des commentaires et un incident via la vraie API (`scripts/demo-data.py`), refuse de continuer si l'une de ces tables est vide,
+  et compare les six tables (users, tickets, comments, incidents, ticket_events, notifications). **À rejouer** à la prochaine
+  session sur AWS : seul `demo-data.py` a été vérifié, contre l'API lancée en local (commentaires et incidents bien créés).
 - Les sauvegardes restent sur le poste (`backups/`, ignoré par Git). Une copie hors machine reste à prévoir.
 
 ## Rejouer
