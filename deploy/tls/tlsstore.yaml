@@ -1,0 +1,12 @@
+# Traefik default certificate: every HTTPS route without its own certificate (the app Ingress included)
+# is served with supportops-tls instead of the built-in "TRAEFIK DEFAULT CERT". No chart change needed.
+# Traefik accepts a single TLSStore named "default"; its Secret must live in the same namespace.
+# Applied by scripts/tls-setup.sh.
+apiVersion: traefik.io/v1alpha1
+kind: TLSStore
+metadata:
+  name: default
+  namespace: supportops
+spec:
+  defaultCertificate:
+    secretName: supportops-tls
