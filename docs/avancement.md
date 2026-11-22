@@ -58,7 +58,7 @@ test de connexion à Redis). Les pods Redis, PostgreSQL, Mailpit et scheduler so
 
 ### Sur AWS (semaine 4)
 
-Le code Terraform cible maintenant **AWS** (compte disponible dans l'équipe, région `eu-west-3`, `t3.medium`). Avant le
+Le code Terraform cible maintenant **AWS** (compte disponible dans l'équipe, région `eu-north-1` Stockholm, `m7i-flex.large`). Avant le
 premier `apply` : utilisateur IAM dédié, clés d'accès uniquement dans l'environnement, budget AWS avec alerte e-mail
 (voir `infrastructure/terraform/README.md`).
 

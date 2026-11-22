@@ -3,5 +3,5 @@
 
 admin_cidrs         = ["203.0.113.10/32"] # your public IP: curl -4 ifconfig.me
 ssh_public_key_path = "~/.ssh/id_ed25519.pub"
-# aws_region        = "eu-west-3"
-# instance_type     = "t3.medium"
+# aws_region        = "eu-north-1" # Free plan account: locked to Stockholm
+# instance_type     = "m7i-flex.large" # Free plan: free-tier-eligible types only

@@ -40,11 +40,11 @@ le compte doit passer en offre payante, sinon il est fermé avec ses ressources.
 Ajouter ensuite, dans le budget, des seuils d'alerte à 50 % et 80 % (onglet **Alerts**, **Edit**), en coût réel.
 Dans **Billing preferences**, activer aussi **Receive Free Tier usage alerts**.
 
-### A5. Vérifier le quota EC2 dans la région Paris
+### A5. Vérifier le quota EC2 dans la région Stockholm
 
-Choisir la région **Europe (Paris) eu-west-3** en haut à droite. **Service Quotas**, **Amazon Elastic Compute Cloud (Amazon EC2)**,
+Choisir la région **Europe (Stockholm) eu-north-1** en haut à droite (le Free plan verrouille le compte sur cette seule région). **Service Quotas**, **Amazon Elastic Compute Cloud (Amazon EC2)**,
 rechercher **Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances**. La valeur doit être **au moins 2** (vCPU)
-pour un `t3.medium`. Sinon, cliquer **Request increase** (délai possible pour un compte récent).
+pour un `m7i-flex.large`. Sinon, cliquer **Request increase** (délai possible pour un compte récent).
 
 ### A6. Créer la politique « gérer ses propres identifiants »
 
@@ -116,7 +116,7 @@ pour un `t3.medium`. Sinon, cliquer **Request increase** (délai possible pour u
 |---|---|
 | URL de connexion et nom d'utilisateur | Message privé |
 | Mot de passe temporaire | **Autre** canal privé, ou de vive voix |
-| Crédits (montant, expiration), région `eu-west-3` | Peut aller dans le groupe de l'équipe |
+| Crédits (montant, expiration), région `eu-north-1` | Peut aller dans le groupe de l'équipe |
 
 Ensuite, Maryam se déconnecte du compte racine et utilise son utilisateur `maryam`.
 
@@ -130,7 +130,7 @@ Ensuite, Maryam se déconnecte du compte racine et utilise son utilisateur `mary
 4. Dans WSL :
 
    ```bash
-   aws configure --profile supportops      # clé, secret, région eu-west-3, format json
+   aws configure --profile supportops      # clé, secret, région eu-north-1, format json
    export AWS_PROFILE=supportops
    aws sts get-caller-identity             # doit afficher ...:user/<votre-nom>
    ```
@@ -162,7 +162,7 @@ Si plusieurs personnes doivent un jour appliquer, il faudra stocker l'état dans
 - [ ] Accès IAM à la facturation activé (A2)
 - [ ] Crédits relevés : montant, expiration (A3)
 - [ ] Budget 10 $ avec alertes aux trois adresses (A4)
-- [ ] Quota EC2 ≥ 2 vCPU en `eu-west-3` (A5)
+- [ ] Quota EC2 ≥ 2 vCPU en `eu-north-1` (A5)
 - [ ] Politique `SupportOpsSelfManageCredentials` et groupe `supportops-team` (A6, A7)
 - [ ] Utilisateurs `aya`, `doha`, `maryam` créés et transmis en privé (A8 à A10)
 - [ ] Chaque membre : mot de passe changé, MFA activée (B1, B2)

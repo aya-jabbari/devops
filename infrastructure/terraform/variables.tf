@@ -5,15 +5,15 @@ variable "project_name" {
 }
 
 variable "aws_region" {
-  description = "AWS region (single region, to keep costs and latency simple)."
+  description = "AWS region. The team account is on the AWS Free plan, which locks it to a single region: eu-north-1 (Stockholm)."
   type        = string
-  default     = "eu-west-3"
+  default     = "eu-north-1"
 }
 
 variable "instance_type" {
-  description = "EC2 size. K3s + PostgreSQL + Redis + Argo CD + Prometheus/Grafana need about 4 GB of RAM at least (t3.medium). t3.micro (1 GB) is too small."
+  description = "EC2 size. K3s + PostgreSQL + Redis + Argo CD + Prometheus/Grafana need at least 4 GB of RAM. The Free plan only accepts free-tier-eligible types: m7i-flex.large (2 vCPU, 8 GB) fits; t3.medium is refused."
   type        = string
-  default     = "t3.medium"
+  default     = "m7i-flex.large"
 }
 
 variable "root_volume_gb" {
