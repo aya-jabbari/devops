@@ -75,7 +75,7 @@ kubectl port-forward -n monitoring svc/prometheus-kube-prometheus-prometheus 909
 
 | Semaine | Tâche prévue | Livrable cible |
 |---|---|---|
-| **Semaine 4** | Scénario k6 nominal et scénario de stress canary | `load-tests/baseline.js`, `load-tests/canary-stress.js` |
-| **Semaine 4** | Mesures sous charge et rédaction du rapport de performance | `docs/performance-rapport.md` |
-| **Semaine 4** | Validation de la CI bloquante sur PR (test en échec / secret détecté) | Preuve de blocage PR pour l'Acte 3 |
-| **Semaine 5** | Répétition de l'Acte 3 (pilote) et de l'Acte 4 (copilote avec Doha) | Démonstration finale |
+| **Semaine 4** | Scénario k6 nominal et scénario de stress canary | ✅ `load-tests/baseline.js`, `load-tests/canary-stress.js` (exécutés sur Compose : 0.00 % erreurs) |
+| **Semaine 4** | Mesures sous charge et rédaction du rapport de performance | ✅ `docs/performance-rapport.md` (mesures nominales et stress 20 VUs ; reste mesure sous incident canary K3s) |
+| **Semaine 4** | Validation de la CI bloquante sur PR (test en échec / secret détecté) | ⬜ Preuve de blocage PR pour l'Acte 3 |
+| **Semaine 5** | Répétition de l'Acte 3 (pilote) et de l'Acte 4 (copilote avec Doha) | ⬜ Démonstration finale |
