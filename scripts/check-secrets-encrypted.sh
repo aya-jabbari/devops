@@ -10,6 +10,12 @@ for f in deploy/secrets/*.yaml; do
   [ -e "$f" ] || continue
   case "$f" in
     *.example.yaml) continue ;;
+    */kustomization.yaml|*/secret-generator.yaml)
+      # KSOPS wiring only: must never carry Secret values itself.
+      if grep -q -E '^(data|stringData):' "$f"; then
+        echo "SECRET VALUES IN KSOPS CONFIG: $f" >&2; status=1
+      fi
+      ;;
     *.enc.yaml)
       if ! grep -q '^sops:' "$f" || ! grep -q 'ENC\[AES256_GCM' "$f"; then
         echo "NOT ENCRYPTED: $f" >&2; status=1
