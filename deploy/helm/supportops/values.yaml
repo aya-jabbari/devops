@@ -84,6 +84,7 @@ frontendImage:
 api:
   replicas: 1
   imageTag: ""            # empty = backendImage.tag; set it to roll out only the API
+  extraEnv: []            # extra env vars for the api pods only (e.g. FAULT_RATE for the demo)
   rollout:
     enabled: false        # true = Argo Rollouts canary instead of a plain Deployment
     analysis:

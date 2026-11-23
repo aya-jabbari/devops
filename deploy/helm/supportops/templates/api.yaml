@@ -50,6 +50,9 @@ spec:
             - { name: http, containerPort: 8000 }
           env:
             {{- include "supportops.backendEnv" . | nindent 12 }}
+            {{- with .Values.api.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false
