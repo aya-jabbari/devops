@@ -6,9 +6,6 @@ postgres:
   persistence:
     size: 2Gi          # matches the volume already created on Kind
 api:
-  extraEnv:
-    - name: FAULT_RATE
-      value: "0.5"
   imageTag: v6
   replicas: 5             # 20% of 5 = exactly 1 canary pod
   rollout:
