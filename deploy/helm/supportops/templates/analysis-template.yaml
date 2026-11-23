@@ -1,0 +1,25 @@
+{{- if and .Values.api.rollout.enabled .Values.api.rollout.analysis.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: api-error-rate
+  labels:
+    {{- include "supportops.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  metrics:
+    - name: error-rate-5xx
+      interval: 30s
+      initialDelay: 30s
+      failureLimit: 1          # 2 bad measurements in a row abort the canary
+      successCondition: "len(result) > 0 && result[0] < {{ .Values.api.rollout.analysis.threshold }}"
+      provider:
+        prometheus:
+          address: {{ .Values.api.rollout.analysis.prometheusAddress }}
+          # Reference query of docs/interfaces.md (also used by the alerts).
+          # "or vector(0)": no 5xx series at all means a rate of 0, not "no data".
+          query: |
+            (sum(rate(http_requests_total{service="api",status=~"5.."}[2m])) or vector(0))
+            /
+            sum(rate(http_requests_total{service="api"}[2m]))
+{{- end }}

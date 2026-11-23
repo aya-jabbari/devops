@@ -86,11 +86,15 @@ api:
   imageTag: ""            # empty = backendImage.tag; set it to roll out only the API
   rollout:
     enabled: false        # true = Argo Rollouts canary instead of a plain Deployment
+    analysis:
+      enabled: true       # abort the canary automatically when the 5xx rate is too high
+      prometheusAddress: http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
+      threshold: 0.02     # docs/interfaces.md: abort above 2% of 5xx
     steps:
       - setWeight: 20
-      - pause: {}         # waits for a manual "promote" until the AnalysisTemplate is wired
+      - pause: { duration: 2m }   # the analysis starts here and runs until the rollout ends
       - setWeight: 50
-      - pause: { duration: 30s }
+      - pause: { duration: 2m }
   resources:
     requests: { cpu: 100m, memory: 192Mi }
     limits: { cpu: 500m, memory: 384Mi }
