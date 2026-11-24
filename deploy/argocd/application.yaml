@@ -7,7 +7,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/aya-jabbari/devops.git
-    targetRevision: feat/doha-helm-contract   # switch to main once the PR is merged
+    targetRevision: main
     path: deploy/helm/supportops
     helm:
       releaseName: supportops
@@ -22,3 +22,6 @@ spec:
       selfHeal: true    # manual changes in the cluster are reverted to what Git says
     syncOptions:
       - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff: { duration: 30s, factor: 2, maxDuration: 5m }

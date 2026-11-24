@@ -1,0 +1,23 @@
+# Light kube-prometheus-stack for the local Kind cluster (dev only).
+alertmanager:
+  enabled: false
+nodeExporter:
+  enabled: false
+kubeStateMetrics:
+  enabled: false
+kubeEtcd: { enabled: false }
+kubeScheduler: { enabled: false }
+kubeControllerManager: { enabled: false }
+kubeProxy: { enabled: false }
+defaultRules:
+  create: false
+grafana:
+  adminPassword: admin          # dev only
+prometheus:
+  prometheusSpec:
+    # pick up ServiceMonitors from any namespace, without a "release" label
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    resources:
+      requests: { cpu: 100m, memory: 400Mi }
+      limits: { memory: 800Mi }

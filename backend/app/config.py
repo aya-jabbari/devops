@@ -16,5 +16,8 @@ class Settings(BaseSettings):
     overdue_check_seconds: int = 300
     notification_max_retries: int = 3
 
+    # Demo only: share (0 to 1) of /api/ requests that fail with a 500, to show a canary being aborted.
+    fault_rate: float = 0.0
+
 
 settings = Settings()

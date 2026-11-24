@@ -20,6 +20,12 @@ spec:
   {{- if .Values.api.rollout.enabled }}
   strategy:
     canary:
+      {{- if .Values.api.rollout.analysis.enabled }}
+      analysis:
+        templates:
+          - templateName: api-error-rate
+        startingStep: 1
+      {{- end }}
       steps:
         {{- toYaml .Values.api.rollout.steps | nindent 8 }}
   {{- end }}
@@ -44,6 +50,9 @@ spec:
             - { name: http, containerPort: 8000 }
           env:
             {{- include "supportops.backendEnv" . | nindent 12 }}
+            {{- with .Values.api.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           securityContext:
             runAsNonRoot: true
             allowPrivilegeEscalation: false

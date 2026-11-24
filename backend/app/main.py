@@ -1,3 +1,4 @@
+import random
 from contextlib import asynccontextmanager
 from time import perf_counter
 
@@ -5,8 +6,9 @@ from fastapi import FastAPI
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 from sqlalchemy import text
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 
+from .config import settings
 from .db import Base, SessionLocal, engine
 from . import models_notification  # noqa: F401  (registers the notifications table)
 from .routers import auth, dashboard, incidents, tickets
@@ -33,6 +35,19 @@ REQUEST_DURATION = Histogram(
 )
 
 
+def _inject_fault(request: Request) -> bool:
+    """Demo only: with FAULT_RATE > 0 a share of /api/ requests fails with a 500.
+
+    Health probes and /metrics are never touched, so a faulty canary stays Ready and the
+    Argo Rollouts analysis (not the readiness probe) is what stops it.
+    """
+    return (
+        settings.fault_rate > 0
+        and request.url.path.startswith("/api/")
+        and random.random() < settings.fault_rate
+    )
+
+
 @app.middleware("http")
 async def collect_http_metrics(request: Request, call_next):
     if request.url.path == "/metrics":
@@ -40,7 +55,10 @@ async def collect_http_metrics(request: Request, call_next):
 
     started = perf_counter()
     try:
-        response = await call_next(request)
+        if _inject_fault(request):
+            response = JSONResponse({"detail": "injected fault (FAULT_RATE)"}, status_code=500)
+        else:
+            response = await call_next(request)
     except Exception:
         REQUEST_COUNT.labels(service="api", status="500").inc()
         REQUEST_DURATION.labels(service="api").observe(perf_counter() - started)
