@@ -1,0 +1,29 @@
+# PROD ONLY. Apply on the AWS K3s node, never on the Kind lab: it uses the same release
+# name and namespace as application.yaml, so both on one cluster would fight over the same objects.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: supportops-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/aya-jabbari/devops.git
+    targetRevision: main
+    path: deploy/helm/supportops
+    helm:
+      releaseName: supportops
+      valueFiles:
+        - ../../environments/prod.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: supportops
+  syncPolicy:
+    automated:
+      prune: false      # PROD: never auto-delete (protects the Postgres PVC); remove stale resources by hand
+      selfHeal: true    # manual changes in the cluster are reverted to what Git says
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff: { duration: 30s, factor: 2, maxDuration: 5m }

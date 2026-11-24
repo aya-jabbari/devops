@@ -5,7 +5,7 @@
 # Written with Aya (data/persistence) ; Doha owns the rest of the chart. Sizes to confirm on the real VM.
 backendImage:
   repository: ghcr.io/aya-jabbari/supportops-backend
-  tag: latest-must-be-overridden     # CI sets the commit SHA: never deploy this placeholder
+  tag: 331bb7a9825f3e7b42b99249cf2b92fe7cf3e830
   pullPolicy: IfNotPresent
 
 postgres:
@@ -29,10 +29,28 @@ worker:
 
 frontendImage:
   repository: ghcr.io/aya-jabbari/supportops-frontend
-  tag: latest-must-be-overridden     # same commit SHA as the backend
+  tag: 331bb7a9825f3e7b42b99249cf2b92fe7cf3e830
   pullPolicy: IfNotPresent
 
 ingress:
   enabled: true
   className: traefik                 # K3s ships Traefik (no nginx ingress controller)
   host: ""                           # no domain yet: match any host on the Elastic IP
+
+# --- API / progressive delivery (Doha) ---
+api:
+  replicas: 2
+  rollout:
+    # TODO(Doha/Aya): switch to true ONLY once Argo Rollouts (CRDs + controller)
+    # and Prometheus are installed on the K3s node. With true and no CRD,
+    # the sync fails on "no matches for kind Rollout".
+    enabled: false
+    analysis:
+      enabled: true
+      # TODO: confirm with Aya where Prometheus runs on the VM. Placeholder:
+      prometheusAddress: http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
+      threshold: 0.02
+
+# Only if kube-prometheus-stack is installed on K3s (needs the ServiceMonitor CRD).
+serviceMonitor:
+  enabled: false
