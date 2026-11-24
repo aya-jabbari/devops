@@ -129,6 +129,109 @@ python -m ruff check app tests
 - Si le backend est recréé, redémarrer aussi le frontend : `docker compose restart frontend`
   (sinon la connexion échoue avec « Request failed »).
 
+## Périmètre de Doha
+
+Doha pilote Kubernetes, le GitOps et le déploiement progressif : chart Helm,
+Argo CD, Argo Rollouts, probes et ressources, ainsi que le lien Grafana du
+tableau de bord. Le chart respecte le contrat de [`docs/interfaces.md`](docs/interfaces.md)
+(namespace `supportops`, Services `api`, `frontend`, `worker`, `scheduler`,
+`postgres`, `redis`, `mailpit`, Secret `supportops-secrets`).
+
+### Chart Helm
+
+`deploy/helm/supportops/` déploie l'API, le frontend, le worker, le scheduler
+(Celery Beat, exactement 1 réplique), PostgreSQL, Redis, Mailpit, l'Ingress et,
+en option, un `ServiceMonitor` et un `AnalysisTemplate`. Les valeurs propres à
+chaque environnement sont dans `deploy/environments/` (`dev.yaml`, `prod.yaml`).
+
+```bash
+helm lint deploy/helm/supportops
+helm template supportops deploy/helm/supportops -f deploy/environments/dev.yaml
+```
+
+### Laboratoire local (Kind)
+
+Une seule commande crée le cluster, installe ingress-nginx, Argo CD,
+Argo Rollouts, kube-prometheus-stack puis l'Application `supportops` :
+
+```bash
+APP_REVISION=<branche> scripts/dev-bootstrap-kind.sh
+```
+
+Après un redémarrage du PC : `docker start supportops-control-plane`, puis
+`kind export kubeconfig --name supportops`, et relancer les `port-forward`.
+
+### GitOps avec Argo CD
+
+L'Application `supportops` (`deploy/argocd/application.yaml`) suit `main`, avec
+synchronisation automatique, `prune`, `selfHeal` et 5 tentatives espacées.
+Git est la source de vérité : un abandon de canary ne change que le cluster,
+donc **le retour arrière se fait par un `git revert`**, pas par `kubectl`.
+
+### Déploiement progressif (Argo Rollouts)
+
+L'API est un `Rollout` en canary (20 % → pause 2 min → 50 % → pause 2 min). Une
+analyse Prometheus tourne en tâche de fond dès la première étape : requête de
+référence de `docs/interfaces.md` (fenêtre de 2 min), mesure toutes les 30 s,
+abandon automatique si le taux de 5xx dépasse **2 %** (`failureLimit: 1`).
+
+Pour la démonstration, la variable `FAULT_RATE` de l'API (nulle par défaut)
+fait échouer une fraction des requêtes `/api/` : une « mauvaise version » est
+donc un simple changement de valeurs dans Git. Jamais appliquée à `/healthz`,
+`/readyz` ni `/metrics` (3 tests dédiés).
+
+| Version | AnalysisRun | Mesures du taux de 5xx | Résultat |
+|---|---|---|---|
+| v6, sans panne | `api-5d7d64b7b6-5` | 8 × `0` | ✅ promue automatiquement |
+| v6 + `FAULT_RATE=0.5` | `api-74bc97445d-6` | `0` → `0,0355` → `0,0575` | ✖ abandon automatique, version stable intacte |
+
+Message du Rollout : `Metric "error-rate-5xx" assessed Failed due to failed (2) > failureLimit (1)`.
+
+### Auto-guérison (testée sur Kind)
+
+| Test | Action | Qui répare | Résultat |
+|---|---|---|---|
+| 1 | Suppression d'un pod de l'API | Kubernetes (ReplicaSet) | nouveau pod immédiat, prêt en ~20 s ; **40 requêtes sur 40 répondues** pendant l'incident |
+| 2 | Worker mis à 0 réplique | Argo CD (`selfHeal`) | retour à `1/1` en quelques secondes, `Synced/Healthy` |
+| 3 | Suppression du Deployment Mailpit | Argo CD (`selfHeal`) | recréé en ~1 s, pod prêt, `Synced/Healthy` |
+
+### Probes et ressources
+
+Tous les conteneurs ont `livenessProbe`, `readinessProbe` et `resources`.
+
+| Charge | Liveness (délai / timeout) | Readiness (délai / timeout) | CPU demandé | Mémoire demandée / limite |
+|---|---|---|---|---|
+| api | 20 s / 1 s | 10 s / 1 s | 100m | 192Mi / 384Mi |
+| frontend | 10 s / 1 s | 3 s / 1 s | 20m | 32Mi / 128Mi |
+| worker | 30 s / 10 s | 15 s / 10 s | 100m | 192Mi / 384Mi |
+| scheduler | 20 s / 1 s | 10 s / 1 s | 50m | 128Mi / 256Mi |
+| postgres | 30 s / 1 s | 5 s / 1 s | 100m | 256Mi / 512Mi |
+| redis | 10 s / 1 s | 3 s / 1 s | 50m | 64Mi / 192Mi |
+| mailpit | 10 s / 1 s | 3 s / 1 s | 25m | 32Mi / 128Mi |
+
+Les probes du worker passent par `sh -c`, car Kubernetes n'interprète pas
+`$(POD_NAME)` dans une commande de probe. Le timeout de 10 s tient compte de la
+lenteur de `celery inspect ping`.
+
+Le frontend résout l'API au moment de la requête (et non au démarrage) : après un
+redémarrage du nœud, nginx ne plante plus avec `host not found in upstream`
+(18 redémarrages observés avant correction, 1 seul après : le redémarrage normal du nœud).
+
+### Production (AWS, nœud K3s)
+
+`deploy/environments/prod.yaml` fixe les images au SHA d'un commit de `main`
+(jamais de `latest`) et `deploy/argocd/application-prod.yaml` suit `main` avec
+`prune: false`, pour protéger le volume PostgreSQL. Le canary est désactivé en
+production tant qu'Argo Rollouts et Prometheus ne sont pas installés sur la VM.
+`application.yaml` et `application-prod.yaml` ne doivent pas être appliqués sur
+le même cluster : ils ciblent le même namespace.
+
+### Lien Grafana
+
+Le tableau de bord de l'application affiche « Open in Grafana ↗ » vers
+`http://localhost:3000/d/supportops-overview`, la même adresse que les alertes.
+Elle se change au build avec `VITE_GRAFANA_URL` (chaîne vide = lien masqué).
+
 ## Tests
 
 ```bash
@@ -170,11 +273,12 @@ Légende : ✅ fait · 🟡 partiel · ⬜ pas commencé
 | Chantier | État | Détail |
 |---|---|---|
 | CI GitHub Actions (tests, build image, Gitleaks, Trivy) | 🟡 | `ci.yml` présent. Pas de publication vers GHCR |
-| Chart Helm : Redis, worker, scheduler | 🟡 | `deploy/helm/supportops/`, `helm lint` OK, **jamais déployé sur un cluster** |
-| Chart Helm : API, frontend, PostgreSQL, volumes | ⬜ | À faire (API : Doha) |
+| Chart Helm : API, frontend, Redis, worker, scheduler, PostgreSQL, Mailpit, Ingress | ✅ | Déployé et vérifié sur Kind ; persistance et probes testées ; `helm template` OK avec `dev.yaml` et `prod.yaml` |
 | Secrets chiffrés (SOPS + age) | ⬜ | Le chart attend un Secret `supportops-secrets` |
-| Argo CD (GitOps) | ⬜ | |
-| Argo Rollouts (canary, abandon) | ⬜ | |
+| Argo CD (GitOps, auto-sync, self-heal) | ✅ sur Kind · 🟡 sur AWS | Auto-guérison prouvée (tests 2 et 3) ; pas encore installé sur la VM AWS |
+| Argo Rollouts (canary, abandon automatique) | ✅ sur Kind · 🟡 sur AWS | Promotion et abandon automatiques prouvés (voir section Doha) ; désactivé dans `prod.yaml` |
+| Audit Trivy, doublon Gitleaks dans `ci.yml`, `.trivyignore` | 🟡 | À faire |
+| Déchiffrement des secrets dans Argo CD (KSOPS) | 🟡 | Fichiers d'Aya à relire et appliquer ; clé Age de Doha à transmettre (clé publique seulement) |
 | Terraform et cloud (réseau, VM, k3s) | ⬜ | Passation : `docs/passation-terraform-cloud.md` |
 | Prometheus, Alertmanager, Grafana, règles d'alerte | ⬜ | `monitoring/` est vide |
 | Tests de charge k6 | ⬜ | `load-tests/` est vide |
