@@ -56,3 +56,7 @@ tbody tr:hover { background: var(--bg); }
 .fill { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
 .fill.p-critical { background: var(--bad); } .fill.p-high { background: var(--warn); } .fill.p-medium, .fill.p-low { background: var(--muted); }
 button.link { background: none; color: var(--ink); padding: 0 .25rem; font-weight: 600; text-decoration: underline; }
+
+.dash-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.grafana-link { font-size: 0.9rem; text-decoration: none; }
+.grafana-link:hover { text-decoration: underline; }
