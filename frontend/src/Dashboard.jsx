@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { api } from "./api.js";
 
+// Same dashboard the alert rules link to (monitoring/alert_rules.yml).
+// Override at build time with VITE_GRAFANA_URL; set it to an empty string to hide the link.
+const GRAFANA_URL = import.meta.env.VITE_GRAFANA_URL ?? "http://localhost:3000/d/supportops-overview";
+
 function Tile({ label, value, tone, onClick }) {
   return (
     <button className={`tile ${tone ?? ""}`} onClick={onClick} disabled={!onClick}>
@@ -24,7 +28,14 @@ export default function Dashboard({ onOpenList }) {
 
   return (
     <section>
-      <h2>Dashboard</h2>
+      <div className="dash-head">
+        <h2>Dashboard</h2>
+        {GRAFANA_URL && (
+          <a className="grafana-link" href={GRAFANA_URL} target="_blank" rel="noopener noreferrer">
+            Open in Grafana ↗
+          </a>
+        )}
+      </div>
       <div className="tiles">
         <Tile label="Open" value={d.open} onClick={() => onOpenList({ status: "open" })} />
         <Tile label="In progress" value={d.in_progress} onClick={() => onOpenList({ status: "in_progress" })} />
